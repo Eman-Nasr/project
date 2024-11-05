@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/vega@5.30.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@5.20.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6.26.0"></script>
+
+  <style>
+    .scroll-down-arrow {
+        position: absolute;
+        top: 1700px; 
+        left: 70%; 
+        transform: translate(-50%, -50%);
+        font-size: 50px; 
+        color: red;
+        cursor: pointer;
+        animation: bounce 2s infinite;
+        text-align: center;
+    }
+    @keyframes bounce {
+        0%, 20%, 50%, 80%, 100% {
+            transform: translateY(-50%);
+        }
+        40% {
+            transform: translateY(-70%);
+        }
+        60% {
+            transform: translateY(-60%);
+        }
+    }
+    </style>
+    
+
+</head>
+<body>
+
+  <!--Task 1 -->
+  <h2>Accident Distribution by Day of the Week</h2>
+  <div style="position: relative; padding: 15px; border: 2px dashed #0072B2; border-radius: 10px; background-color: #e1f6ff; width: 50%; margin-bottom: 15px;">
+    <p><strong>Description:</strong></p>
+    <p>This bar chart shows the distribution of traffic accidents across different days of the week. Each day is represented by a unique color, allowing for easy comparison of accident frequency. The chart provides insights into weekly trends, helping identify which days experience higher accident rates.</p>
+    <div style="position: absolute; bottom: -15px; left: 20px; width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 15px solid #0072B2;"></div>
+  </div>
+  <div id="vis1"></div>
+  <script>
+    const spec1 = {
+      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+      "width": 500,
+      "height": 500,
+      "data": {
+        "url": "https://raw.githubusercontent.com/sheriefAbdallah/CS318/refs/heads/main/Traffic_Incidents.csv",
+        "format": {"type": "csv", "parse": {"acci_time": "utc:'%d/%m/%Y %H:%M:%S'"}}
+      },
+      "mark": "bar",
+      "encoding": {
+        "x": {
+          "timeUnit": "day",
+          "field": "acci_time",
+          "type": "ordinal",
+          "axis": {"title": "Day of the Week", "labelAngle": 0},
+          "sort": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday"
+          ]
+        },
+        "y": {
+          "aggregate": "count",
+          "field": "acci_id",
+          "type": "quantitative",
+          "axis": {"title": "Number of Accidents"}
+        },
+        "color": {
+          "field": "acci_time",
+          "type": "nominal",
+          "timeUnit": "day",
+          "scale": {
+            "domain": ["Monday", "Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
+            "range": ["#0072B2", "#56B4E9", "#F0E442", "#E69F00", "#D55E00", "#CC79A7", "#009E73"]
+          },
+          "legend": null
+        },
+        "tooltip": [
+            {"field": "acci_time", "type": "ordinal", "title": "Day of the Week", "timeUnit": "day"},
+            {"aggregate": "count", "field": "acci_id", "type": "quantitative", "title": "Number of Accidents"}
+        ]
+      }
+    };
+    vegaEmbed("#vis1", spec1, {mode: "vega-lite"}).then(console.log).catch(console.warn);
+  </script>
+
+  <hr>
+
+  <!--Task 2 -->
+  <h2>Accident Distribution by Hour of the Day</h2>
+  <div style="position: relative; padding: 15px; border: 2px dashed #0072B2; border-radius: 10px; background-color: #e1f6ff; width: 50%; margin-bottom: 15px;">
+    <p><strong>Description:</strong></p>
+    <p>Each day of the week exhibits a consistent trend in accident occurrence. Typically, there is a noticeable increase in accidents during the morning, late afternoon, and early evening. This pattern then generally tapers off as night approaches. The distinct color representation for each day helps visualize the rhythm of daily traffic incidents, emphasizing peak times across the week.</p>
+    <div style="position: absolute; bottom: -15px; left: 20px; width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 15px solid #0072B2;"></div>
+  </div>
+  
+  <div id="vis2"></div>
+  <script>
+    const spec2 = {
+      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+      "width": 500,
+      "height": 500,
+      "data": {
+        "url": "https://raw.githubusercontent.com/sheriefAbdallah/CS318/refs/heads/main/Traffic_Incidents.csv",
+        "format": {
+          "type": "csv",
+          "parse": {"acci_time": "date:'%d/%m/%Y %H:%M:%S'"}
+        }
+      },
+      "transform": [
+        {"calculate": "hours(toDate(datum.acci_time))", "as": "hour"},
+        {"timeUnit": "day", "field": "acci_time", "as": "day"},
+        {
+          "aggregate": [{"op": "count", "field": "acci_id", "as": "num_accidents"}],
+          "groupby": ["hour", "day"]
+        }
+      ],
+      "mark": {
+            "type": "line",
+            "strokeWidth": 3,
+            "point": {"filled": true, "size": 25}
+        },
+      "encoding": {
+        "x": {
+          "field": "hour",
+          "type": "quantitative",
+          "title": "Hour of the Day",
+          "axis": {
+            "labelAngle": 0,
+            "tickCount": 24,
+            "labelOverlap": false,
+            "tickMinStep": 1
+          },
+          "scale": {"domain": [0, 23]}
+        },
+        "y": {
+          "field": "num_accidents",
+          "type": "quantitative",
+          "title": "Number of Accidents"
+        },
+        "color": {
+          "field": "day",
+          "type": "nominal",
+          "title": "Day of the Week",
+          "timeUnit": "day",
+          "scale": {
+            "range": ["#d7191c", "#fdae61", "#ffcc00", "#1a9641", "#2b83ba", "#abdda4", "#f46d43"]
+            }
+        },
+        "tooltip": [
+          {"field": "hour", "type": "ordinal", "title": "Hour of the Day"},
+          {"field": "num_accidents", "type": "quantitative", "title": "Number of Accidents"},
+          {"field": "day", "type": "nominal", "title": "Day of the Week", "timeUnit": "day"}
+        ]
+      }
+    };
+    vegaEmbed("#vis2", spec2, {mode: "vega-lite"}).then(console.log).catch(console.warn);
+  </script>
+
+  <hr>
+
+  <!--task3-->
+  <div style="position: relative; padding: 15px; border: 2px dashed #0072B2; border-radius: 10px; background-color: #e1f6ff; width: 50%; margin-bottom: 15px;">
+    <p><strong>Description:</strong></p>
+    <p>The enhanced accident density map improves clarity and data interpretation by using a refined color scale from light blue to dark red, emphasizing high-density areas. Expanded size scaling draws attention to hotspots, while full opacity sharpens visibility. We also increased the circle sizes and adjusted their color to ensure that even with lower opacity, the map remains visually clear and readable. Adding Dubai's geographic outline provides essential context, making accident locations easier to interpret within the city layout. These updates make the map more informative and visually clear.</p>
+    <div style="position: absolute; bottom: -15px; left: 20px; width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 15px solid #0072B2;"></div>
+    </div>
+    <div id="scrollDownArrow" class="scroll-down-arrow">
+      &#x21E3; <!-- Unicode for downward arrow with a tail -->
+      <span style="display: block; font-size: 16px; color: red; text-align: center; margin-top: 5px;">Scroll down until the end</span>
+  </div>
+  <script>
+    window.addEventListener('scroll', () => { 
+        const scrollArrow = document.getElementById('scrollDownArrow');
+        const descriptionBox = scrollArrow.parentElement;
+        const boxPosition = descriptionBox.getBoundingClientRect();
+    
+        if (window.scrollY > boxPosition.top + window.scrollY + boxPosition.height) { 
+            scrollArrow.style.display = 'none';
+        } else {
+            scrollArrow.style.display = 'block';
+        }
+    });
+    </script>
+  
+  <h2>Original Accident Density Map</h2>
+  <div id="vis3"></div>
+  <script>
+    const spec3 = {
+      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+      "width": 1000,
+      "height": 700,
+      
+      "data": {
+        "url": "https://raw.githubusercontent.com/sheriefAbdallah/CS318/refs/heads/main/Traffic_Incidents.csv",
+        "format": {
+          "type": "csv",
+          "parse": {"acci_time": "date:'%d/%m/%Y %H:%M:%S'"}
+        }
+      },
+      "transform": [
+        {"filter": "datum.acci_y > 23"},
+        {
+          "aggregate": [
+            {"op": "count", "as": "accident_count"},
+            {"op": "min", "field": "acci_time", "as": "min_acci_time"},
+            {"op": "min", "field": "acci_name", "as": "min_acci_name"}
+          ],
+          "groupby": ["acci_x", "acci_y"]
+        }
+      ],
+      "mark": {"type": "circle", "opacity": 0.2},
+      "encoding": {
+        "longitude": {"field": "acci_y", "type": "quantitative"},
+        "latitude": {"field": "acci_x", "type": "quantitative"},
+        "size": {
+          "field": "accident_count",
+          "type": "quantitative",
+          "title": "Accident Count",
+          "scale": {"range": [3, 300]}
+        },
+        "color": {
+          "field": "accident_count",
+          "type": "quantitative",
+          "scale": {
+            "domain": [0, 100],
+            "range": ["#add8e6", "#ff4500", "#ba55d3", "#9370db", "#8b0000"]
+          },
+          "title": "Accident Density"
+        },
+        "tooltip": [
+          {"field": "acci_x", "type": "quantitative", "title": "Latitude"},
+          {"field": "acci_y", "type": "quantitative", "title": "Longitude"},
+          {"field": "accident_count", "type": "quantitative", "title": "Accident Count"},
+          {"field": "min_acci_time", "type": "temporal", "title": "Time of Accident"},
+          {"field": "min_acci_name", "type": "nominal", "title": "Incident Description"}
+        ]
+      }
+    };
+    vegaEmbed("#vis3", spec3, {mode: "vega-lite"}).then(console.log).catch(console.warn);
+  </script>
+
+  <!-- Task 3 New: Enhanced Accident Density Map with Geographic Background -->
+  <h2>Enhanced Accident Density Map</h2>
+  <div id="vis3New"></div>
+  <script>
+    const spec3New = {
+      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+      "width": 1000,
+      "height": 700,
+      "layer": [
+        {
+          "data": {
+            "url": "https://raw.githubusercontent.com/sbma44/uber-cities/master/geojson/dubai.geojson",
+            "format": {"type": "topojson", "feature": "states"}
+          },
+          "mark": {"type": "geoshape", "fill": "#f2f2f296", "stroke": "gray"}
+        },
+        {
+          "data": {
+            "url": "https://raw.githubusercontent.com/sheriefAbdallah/CS318/refs/heads/main/Traffic_Incidents.csv",
+            "format": {
+              "type": "csv",
+              "parse": {"acci_time": "date:'%d/%m/%Y %H:%M:%S'"}
+            }
+          },
+          "transform": [
+            {"filter": "datum.acci_y > 23"},
+            {
+              "aggregate": [
+                {"op": "count", "as": "accident_count"},
+                {"op": "min", "field": "acci_time", "as": "min_acci_time"},
+                {"op": "min", "field": "acci_name", "as": "min_acci_name"}
+              ],
+              "groupby": ["acci_x", "acci_y"]
+            }
+          ],
+          "mark": {"type": "circle", "opacity": 1},
+          "encoding": {
+            "longitude": {"field": "acci_y", "type": "quantitative"},
+            "latitude": {"field": "acci_x", "type": "quantitative"},
+            "size": {
+              "field": "accident_count",
+              "type": "quantitative",
+              "title": "Accident Count",
+              "scale": {"range": [10, 450]}
+            },
+            "color": {
+              "field": "accident_count",
+              "type": "quantitative",
+              "scale": {
+                "domain": [0, 100],
+                "range": ["#add8e6", "#ff4500", "#ba55d3", "#9370db", "#8b0000"]
+
+              },
+              "title": "Accident Density"
+            },
+            "tooltip": [
+              {"field": "acci_x", "type": "quantitative", "title": "Latitude"},
+              {"field": "acci_y", "type": "quantitative", "title": "Longitude"},
+              {"field": "accident_count", "type": "quantitative", "title": "Accident Count"},
+              {"field": "min_acci_time", "type": "temporal", "title": "Time of Accident"},
+              {"field": "min_acci_name", "type": "nominal", "title": "Incident Description"}
+            ]
+          }
+        }
+      ]
+    };
+    vegaEmbed("#vis3New", spec3New, {mode: "vega-lite"}).then(console.log).catch(console.warn);
+  </script>
+
+
+</body>
+</html>
